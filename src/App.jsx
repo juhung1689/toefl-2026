@@ -98,9 +98,36 @@ const VOCAB = [
 ];
 
 const CTW_ITEMS = [
-  { blanks: ["uni___sity","off___s","w___","acad___ic","pro___ms"], fills: ["university","offers","wide","academic","programs"], answer: "The university offers a wide range of academic programs." },
-  { blanks: ["Res___rchers","con___rmed","cli___te","ch___ge","acc___lerating"], fills: ["Researchers","confirmed","climate","change","accelerating"], answer: "Researchers have confirmed that climate change is accelerating." },
-  { blanks: ["Stu___nts","enc___raged","part___pate","act___ely","dis___ssions"], fills: ["Students","encouraged","participate","actively","discussions"], answer: "Students are encouraged to participate actively in discussions." },
+  {
+    passage: [
+      { text: "Many " }, { blank: true, hint: "uni___sity", fill: "university" },
+      { text: " students struggle to balance their " }, { blank: true, hint: "acad___ic", fill: "academic" },
+      { text: " workload with part-time jobs. The " }, { blank: true, hint: "dem___d", fill: "demand" },
+      { text: " for higher " }, { blank: true, hint: "edu___tion", fill: "education" },
+      { text: " has led many " }, { blank: true, hint: "inst___utions", fill: "institutions" },
+      { text: " to offer flexible online courses to help students manage their time more effectively." }
+    ]
+  },
+  {
+    passage: [
+      { text: "Scientists have long " }, { blank: true, hint: "obs___ved", fill: "observed" },
+      { text: " that the Earth's " }, { blank: true, hint: "atm___phere", fill: "atmosphere" },
+      { text: " is gradually warming. This " }, { blank: true, hint: "phen___enon", fill: "phenomenon" },
+      { text: ", known as climate change, is " }, { blank: true, hint: "pri___rily", fill: "primarily" },
+      { text: " caused by the burning of " }, { blank: true, hint: "fos___l", fill: "fossil" },
+      { text: " fuels, which releases large amounts of carbon dioxide into the air." }
+    ]
+  },
+  {
+    passage: [
+      { text: "Urban " }, { blank: true, hint: "dev___opment", fill: "development" },
+      { text: " has brought significant " }, { blank: true, hint: "econ___ic", fill: "economic" },
+      { text: " benefits to many cities. However, rapid " }, { blank: true, hint: "pop___ation", fill: "population" },
+      { text: " growth has also created " }, { blank: true, hint: "env___onmental", fill: "environmental" },
+      { text: " challenges, including " }, { blank: true, hint: "poll___ion", fill: "pollution" },
+      { text: " and a shortage of affordable housing for low-income residents." }
+    ]
+  },
 ];
 
 const DAILY_PASSAGES = [
@@ -169,7 +196,60 @@ const DISC_PROMPTS = [
 function wc(t) { return t.trim().split(/\s+/).filter(Boolean).length; }
 function shuffleArr(arr) { return [...arr].sort(() => Math.random() - 0.5); }
 
-// ── MCOpt ──
+// ── CTW 컴포넌트 ──
+function CTWQuestion({ cIdx, setCIdx }) {
+  const item = CTW_ITEMS[cIdx];
+  const blanks = item.passage.filter(p => p.blank);
+  const [inputs, setInputs] = useState(Array(blanks.length).fill(""));
+  const [checked, setChecked] = useState(false);
+  const [score, setScore] = useState(0);
+
+  const check = () => {
+    let s = 0;
+    inputs.forEach((v, i) => { if (v.trim().toLowerCase() === blanks[i].fill.toLowerCase()) s++; });
+    setScore(s); setChecked(true);
+  };
+
+  const next = () => {
+    const n = cIdx + 1 < CTW_ITEMS.length ? cIdx + 1 : cIdx;
+    setCIdx(n); setChecked(false); setScore(0);
+    setInputs(Array(CTW_ITEMS[n].passage.filter(p => p.blank).length).fill(""));
+  };
+
+  let bCount = 0;
+  return (
+    <Card>
+      <div style={{ display:"flex", justifyContent:"space-between", fontSize:13, color:"#64748b", marginBottom:12 }}>
+        <span>문항 {cIdx+1} / {CTW_ITEMS.length}</span>
+        {checked && <span style={{ fontWeight:700, color:"#1e3a8a" }}>정답 {score}/{blanks.length}</span>}
+      </div>
+      <p style={{ fontSize:13, color:"#64748b", marginBottom:12 }}>빈칸에 알맞은 단어를 완성하세요 (일부 철자가 주어집니다)</p>
+      <div style={{ background:"#f8fafc", borderLeft:"4px solid #1e3a8a", borderRadius:10, padding:"16px 20px", marginBottom:16, fontSize:15, lineHeight:2.8, color:"#1e293b" }}>
+        {item.passage.map((part, pi) => {
+          if (!part.blank) return <span key={pi}>{part.text}</span>;
+          const bi = bCount++;
+          const correct = checked && inputs[bi]?.trim().toLowerCase() === blanks[bi].fill.toLowerCase();
+          const wrong = checked && !correct;
+          return (
+            <span key={pi} style={{ display:"inline-flex", flexDirection:"column", alignItems:"center", verticalAlign:"middle", margin:"0 4px" }}>
+              <span style={{ fontSize:11, color:"#94a3b8", fontStyle:"italic", lineHeight:1, marginBottom:2 }}>{part.hint}</span>
+              <input value={inputs[bi] || ""} onChange={e => { const n=[...inputs]; n[bi]=e.target.value; setInputs(n); }} disabled={checked}
+                style={{ width:110, padding:"3px 8px", border:`2px solid ${wrong?"#fca5a5":correct?"#86efac":"#cbd5e1"}`,
+                  borderRadius:6, fontSize:14, textAlign:"center",
+                  background:wrong?"#fff5f5":correct?"#f0fdf4":"#fff", outline:"none" }} />
+              {checked && <span style={{ fontSize:11, color:correct?"#15803d":"#dc2626", lineHeight:1, marginTop:2 }}>{correct?"✓":blanks[bi].fill}</span>}
+            </span>
+          );
+        })}
+      </div>
+      <div style={{ display:"flex", gap:8 }}>
+        {!checked
+          ? <BTN onClick={check} disabled={inputs.some(v=>!v.trim())} style={{flex:1}}>확인</BTN>
+          : <BTN onClick={next} style={{flex:1}}>{cIdx+1<CTW_ITEMS.length?"다음 →":"완료"}</BTN>}
+      </div>
+    </Card>
+  );
+}
 const MCOpt = ({ label, i, sel, checked, correct, onSelect }) => {
   let bg = "#f8fafc", border = "#e2e8f0", col = "#334155";
   if (checked) {
@@ -326,9 +406,6 @@ function ReadingSection() {
   const [rTask, setRTask] = useState(null);
   const [taskSecs, setTaskSecs] = useState(0);
   const [cIdx, setCIdx] = useState(0);
-  const [cInputs, setCInputs] = useState(Array(CTW_ITEMS[0].fills.length).fill(""));
-  const [cChecked, setCChecked] = useState(false);
-  const [cScore, setCScore] = useState(0);
   const [dIdx, setDIdx] = useState(0);
   const [dSel, setDSel] = useState({});
   const [dChecked, setDChecked] = useState(false);
@@ -374,33 +451,7 @@ function ReadingSection() {
         ))}
       </div>
 
-      {rTask === "ctw" && (
-        <Card>
-          <div style={{ display:"flex", justifyContent:"space-between", fontSize:13, color:"#64748b", marginBottom:12 }}>
-            <span>문항 {cIdx+1} / {CTW_ITEMS.length}</span>
-            {cChecked && <span style={{ fontWeight:700, color:"#1e3a8a" }}>정답 {cScore}/{CTW_ITEMS[cIdx].fills.length}</span>}
-          </div>
-          <p style={{ fontSize:13, color:"#64748b", marginBottom:10 }}>빈칸에 알맞은 단어를 완성하세요</p>
-          <div style={{ background:"#f8fafc", borderRadius:10, padding:16, marginBottom:16, fontSize:15, lineHeight:2 }}>
-            {CTW_ITEMS[cIdx].fills.map((fill, i) => {
-              const correct = cInputs[i]?.trim().toLowerCase()===fill.toLowerCase();
-              return (
-                <span key={i} style={{ display:"inline-flex", alignItems:"center", gap:6, marginRight:12, marginBottom:4 }}>
-                  <span style={{ color:"#94a3b8", fontStyle:"italic", fontSize:13 }}>{CTW_ITEMS[cIdx].blanks[i]} →</span>
-                  <input value={cInputs[i]} onChange={e=>{const n=[...cInputs];n[i]=e.target.value;setCInputs(n);}} disabled={cChecked}
-                    style={{ width:130, padding:"3px 8px", border:`2px solid ${cChecked?(correct?"#86efac":"#fca5a5"):"#cbd5e1"}`,
-                      borderRadius:6, fontSize:14, background:cChecked?(correct?"#f0fdf4":"#fff5f5"):"#fff", outline:"none" }} />
-                </span>
-              );
-            })}
-          </div>
-          {cChecked && <div style={{ background:"#f0f9ff", borderRadius:8, padding:10, marginBottom:12, fontSize:13, color:"#0369a1" }}>정답: <b>{CTW_ITEMS[cIdx].answer}</b></div>}
-          <div style={{ display:"flex", gap:8 }}>
-            {!cChecked ? <BTN onClick={checkCTW} disabled={cInputs.some(v=>!v.trim())} style={{flex:1}}>확인</BTN>
-              : <BTN onClick={nextCTW} style={{flex:1}}>{cIdx+1<CTW_ITEMS.length?"다음 →":"완료"}</BTN>}
-          </div>
-        </Card>
-      )}
+      {rTask === "ctw" && <CTWQuestion cIdx={cIdx} setCIdx={setCIdx} />}
 
       {rTask === "daily" && (
         <div>
