@@ -589,38 +589,11 @@ function SpeakingSection() {
       {!hasSpeech && <div style={{ background:"#fef3c7", border:"1px solid #fbbf24", borderRadius:10, padding:12, marginBottom:14, fontSize:13, color:"#92400e" }}>⚠️ Chrome 또는 Edge에서 음성 인식이 지원됩니다.</div>}
 
       {sTask === "repeat" && (
-        <Card>
-          <div style={{ display:"flex", justifyContent:"space-between", fontSize:13, color:"#64748b", marginBottom:12 }}>
-            <span>문장 {rIdx+1} / {REPEAT_SENTENCES.length}</span>
-            <span style={{ background:"#dbeafe", color:"#1e3a8a", borderRadius:12, padding:"2px 10px", fontSize:12, fontWeight:600 }}>Level {REPEAT_SENTENCES[rIdx].level}</span>
-          </div>
-          <div style={{ background:"#e2e8f0", borderRadius:6, height:4, marginBottom:20 }}>
-            <div style={{ background:"#1e3a8a", height:4, borderRadius:6, width:`${(rIdx/REPEAT_SENTENCES.length)*100}%`, transition:"width 0.3s" }} />
-          </div>
-          <div style={{ background:"#1e3a8a", borderRadius:14, padding:"28px 24px", textAlign:"center", marginBottom:20 }}>
-            <p style={{ fontSize:13, color:"#93c5fd", margin:"0 0 8px" }}>{rTranscript?"들은 문장:":"🎤 마이크를 누르고 문장을 따라 말하세요"}</p>
-            <p style={{ fontSize:18, fontWeight:600, color:"#fff", margin:0, lineHeight:1.5 }}>{rTranscript?REPEAT_SENTENCES[rIdx].text:"???"}</p>
-          </div>
-          <div style={{ textAlign:"center", marginBottom:16 }}>
-            <MicBtn listening={rListening} onStart={()=>{setRTranscript("");setRResult(null);setRListening(true);startListening(t=>setRTranscript(t),()=>setRListening(false));}} onStop={stopListening} />
-            <p style={{ fontSize:13, color:"#64748b", marginTop:8 }}>{rListening?"🔴 녹음 중...":rTranscript?"녹음 완료":"버튼을 눌러 시작"}</p>
-          </div>
-          {rTranscript && !rResult && <div style={{ background:"#f8fafc", borderRadius:8, padding:10, marginBottom:12, fontSize:14, color:"#334155" }}><b>내 답변:</b> {rTranscript}</div>}
-          {rResult && (
-            <div style={{ display:"flex", gap:8, marginBottom:12 }}>
-              <ScoreBadge label="정확도" val={rResult.score} max={5} />
-              <div style={{ flex:3, background:"#f8fafc", borderRadius:10, padding:"10px 14px", border:"1px solid #e2e8f0", fontSize:14, color:"#334155" }}>
-                {rResult.feedback}
-                {rResult.missing && <p style={{ margin:"4px 0 0", color:"#dc2626", fontSize:13 }}>빠진/틀린 부분: <b>{rResult.missing}</b></p>}
-              </div>
-            </div>
-          )}
-          <div style={{ display:"flex", gap:8 }}>
-            {!rResult
-              ? <BTN onClick={async()=>{if(!rTranscript||rLoading)return;setRLoading(true);const res=await callClaude(`Original: "${REPEAT_SENTENCES[rIdx].text}"\nStudent: "${rTranscript}"\nEvaluate repetition accuracy. Reply ONLY in JSON (no markdown): {"score":3,"feedback":"Korean 1-2 sentences","missing":"wrong words or empty string"}`,`You are a TOEFL Speaking evaluator. Score 0-5.`);try{setRResult(JSON.parse(res.replace(/```json|```/g,"").trim()));}catch{setRResult({score:0,feedback:"채점 오류",missing:""});}setRLoading(false);}} disabled={!rTranscript||rLoading} style={{flex:1}}>{rLoading?"채점 중...":"AI 채점"}</BTN>
-              : <BTN onClick={()=>{setRTranscript("");setRResult(null);if(rIdx+1<REPEAT_SENTENCES.length)setRIdx(i=>i+1);else setSTask("interview");}} style={{flex:1}}>{rIdx+1>=REPEAT_SENTENCES.length?"인터뷰로 이동 →":"다음 문장 →"}</BTN>}
-          </div>
-        </Card>
+        <RepeatTask
+          rIdx={rIdx} setRIdx={setRIdx}
+          setSTask={setSTask}
+          qSecs={qSecs} totalSecs={totalSecs}
+        />
       )}
 
       {sTask === "interview" && (
