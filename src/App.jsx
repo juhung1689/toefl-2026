@@ -398,7 +398,7 @@ function CTWQuestion({ cIdx, setCIdx }) {
                   value={inputs[bi] || ""}
                   onChange={e => { const n=[...inputs]; n[bi]=e.target.value; setInputs(n); }}
                   disabled={checked}
-                  placeholder={part.blank.replace(/./g,"_")}
+                  placeholder={"_ ".repeat(part.blank.length).trim()}
                   style={{
                     width: Math.max(part.blank.length * 11, 50),
                     padding:"3px 6px",
