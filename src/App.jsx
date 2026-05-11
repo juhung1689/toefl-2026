@@ -98,15 +98,15 @@ const CTW_ITEMS = [
     title: "The Renaissance",
     passage: [
       { t:"The Renaissance was a period in European history from the fourteenth to the seventeenth " },
-      { b:true, hint:"_____uries", fill:"centuries", clue:"cent" },
+      { b:true, shown:"cent", blank:"uries", fill:"uries" },
       { t:". This era is " },
-      { b:true, hint:"chara_____ized", fill:"characterized", clue:"cter" },
+      { b:true, shown:"charac", blank:"terized", fill:"terized" },
       { t:" by a renewed interest in classical " },
-      { b:true, hint:"_____ture", fill:"culture", clue:"cul" },
+      { b:true, shown:"cul", blank:"ture", fill:"ture" },
       { t:" and art. It " },
-      { b:true, hint:"esta_____shed", fill:"established", clue:"bli" },
+      { b:true, shown:"estab", blank:"lished", fill:"lished" },
       { t:" a flourishing environment where artists like Leonardo da Vinci created masterpieces that celebrated human " },
-      { b:true, hint:"poten_____", fill:"potential", clue:"tial" },
+      { b:true, shown:"poten", blank:"tial", fill:"tial" },
       { t:"." },
     ]
   },
@@ -114,15 +114,15 @@ const CTW_ITEMS = [
     title: "Climate Change",
     passage: [
       { t:"Scientists have long " },
-      { b:true, hint:"obser_____", fill:"observed", clue:"ved" },
+      { b:true, shown:"ob", blank:"served", fill:"served" },
       { t:" that the Earth's " },
-      { b:true, hint:"_____osphere", fill:"atmosphere", clue:"atm" },
+      { b:true, shown:"atmo", blank:"sphere", fill:"sphere" },
       { t:" is gradually warming. This " },
-      { b:true, hint:"pheno_____non", fill:"phenomenon", clue:"me" },
+      { b:true, shown:"pheno", blank:"menon", fill:"menon" },
       { t:" is primarily caused by burning " },
-      { b:true, hint:"fos_____", fill:"fossil", clue:"sil" },
+      { b:true, shown:"fos", blank:"sil", fill:"sil" },
       { t:" fuels, which releases carbon " },
-      { b:true, hint:"diox_____", fill:"dioxide", clue:"ide" },
+      { b:true, shown:"di", blank:"oxide", fill:"oxide" },
       { t:" into the air." },
     ]
   },
@@ -130,15 +130,15 @@ const CTW_ITEMS = [
     title: "Urban Development",
     passage: [
       { t:"Urban " },
-      { b:true, hint:"devel_____ment", fill:"development", clue:"op" },
+      { b:true, shown:"devel", blank:"opment", fill:"opment" },
       { t:" has brought significant " },
-      { b:true, hint:"econ_____ic", fill:"economic", clue:"om" },
+      { b:true, shown:"econ", blank:"omic", fill:"omic" },
       { t:" benefits to many cities. However, rapid population growth has created " },
-      { b:true, hint:"envir_____mental", fill:"environmental", clue:"on" },
+      { b:true, shown:"environ", blank:"mental", fill:"mental" },
       { t:" challenges, including " },
-      { b:true, hint:"pollu_____", fill:"pollution", clue:"tion" },
+      { b:true, shown:"pollu", blank:"tion", fill:"tion" },
       { t:" and a shortage of " },
-      { b:true, hint:"afford_____", fill:"affordable", clue:"able" },
+      { b:true, shown:"afford", blank:"able", fill:"able" },
       { t:" housing for low-income residents." },
     ]
   },
@@ -349,48 +349,83 @@ function VocabSection() {
 // ══════════════════════════════════════════════
 // CTW COMPONENT
 // ══════════════════════════════════════════════
-function CTWQuestion({ cIdx, setCIdx, onBack }) {
+function CTWQuestion({ cIdx, setCIdx }) {
   const item = CTW_ITEMS[cIdx];
-  const blanks = item.passage.filter(p=>p.b);
+  const blanks = item.passage.filter(p => p.b);
   const [inputs, setInputs] = useState(Array(blanks.length).fill(""));
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState(0);
-  const [expired, setExpired] = useState(false);
 
-  useEffect(()=>{ setInputs(Array(CTW_ITEMS[cIdx].passage.filter(p=>p.b).length).fill("")); setChecked(false); setScore(0); setExpired(false); },[cIdx]);
+  useEffect(() => {
+    setInputs(Array(CTW_ITEMS[cIdx].passage.filter(p => p.b).length).fill(""));
+    setChecked(false); setScore(0);
+  }, [cIdx]);
 
-  const check=()=>{ let s=0; inputs.forEach((v,i)=>{if(v.trim().toLowerCase()===blanks[i].fill.toLowerCase())s++;}); setScore(s); setChecked(true); };
-  const next=()=>{ if(cIdx+1<CTW_ITEMS.length)setCIdx(c=>c+1); };
+  const check = () => {
+    let s = 0;
+    inputs.forEach((v, i) => {
+      if (v.trim().toLowerCase() === blanks[i].fill.toLowerCase()) s++;
+    });
+    setScore(s); setChecked(true);
+  };
 
-  let bCount=0;
+  let bCount = 0;
   return (
     <Card>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-        <span style={{fontSize:13,color:"#64748b"}}>문항 {cIdx+1}/{CTW_ITEMS.length} — {item.title}</span>
-        {checked&&<span style={{fontWeight:700,color:"#1e3a8a"}}>정답 {score}/{blanks.length}</span>}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+        <span style={{ fontSize:13, color:"#64748b" }}>문항 {cIdx+1}/{CTW_ITEMS.length} — {item.title}</span>
+        {checked && <span style={{ fontWeight:700, color:"#1e3a8a" }}>정답 {score}/{blanks.length}</span>}
       </div>
-      <CountdownTimer totalSecs={180} onExpire={()=>{setExpired(true);if(!checked)check();}} />
-      {expired&&!checked&&<div style={{background:"#fff5f5",border:"1px solid #fca5a5",borderRadius:8,padding:"6px 12px",marginBottom:10,fontSize:13,color:"#dc2626",textAlign:"center"}}>⏰ 시간 초과</div>}
-      <p style={{fontSize:13,color:"#64748b",marginBottom:12}}>빈칸의 힌트를 보고 알맞은 전체 단어를 입력하세요</p>
-      <div style={{background:"#f8fafc",borderLeft:"4px solid #1e3a8a",borderRadius:10,padding:"16px 20px",marginBottom:16,fontSize:15,lineHeight:3.2,color:"#1e293b"}}>
-        {item.passage.map((part,pi)=>{
-          if(!part.b) return <span key={pi}>{part.t}</span>;
-          const bi=bCount++;
-          const correct=checked&&inputs[bi]?.trim().toLowerCase()===blanks[bi].fill.toLowerCase();
-          const wrong=checked&&!correct;
+      <CountdownTimer totalSecs={180} onExpire={() => { if (!checked) check(); }} />
+      <p style={{ fontSize:13, color:"#64748b", marginBottom:12 }}>
+        색칠된 부분을 보고 <b>빠진 철자</b>만 입력하세요
+      </p>
+      <div style={{ background:"#f8fafc", borderLeft:"4px solid #1e3a8a", borderRadius:10, padding:"16px 20px", marginBottom:16, fontSize:15, lineHeight:3.4, color:"#1e293b" }}>
+        {item.passage.map((part, pi) => {
+          if (!part.b) return <span key={pi}>{part.t}</span>;
+          const bi = bCount++;
+          const correct = checked && inputs[bi]?.trim().toLowerCase() === blanks[bi].fill.toLowerCase();
+          const wrong = checked && !correct;
           return (
-            <span key={pi} style={{display:"inline-flex",flexDirection:"column",alignItems:"center",verticalAlign:"middle",margin:"0 4px"}}>
-              <span style={{fontSize:11,color:"#94a3b8",fontStyle:"italic",lineHeight:1,marginBottom:2}}>{part.hint}</span>
-              <input value={inputs[bi]||""} onChange={e=>{const n=[...inputs];n[bi]=e.target.value;setInputs(n);}} disabled={checked}
-                style={{width:130,padding:"3px 8px",border:`2px solid ${wrong?"#fca5a5":correct?"#86efac":"#cbd5e1"}`,borderRadius:6,fontSize:14,textAlign:"center",background:wrong?"#fff5f5":correct?"#f0fdf4":"#fff",outline:"none"}}/>
-              {checked&&<span style={{fontSize:11,color:correct?"#15803d":"#dc2626",lineHeight:1,marginTop:2}}>{correct?"✓":blanks[bi].fill}</span>}
+            <span key={pi} style={{ display:"inline-flex", alignItems:"baseline", verticalAlign:"middle", margin:"0 2px" }}>
+              {/* 보이는 앞부분 */}
+              <span style={{ background:"#dbeafe", color:"#1e40af", fontWeight:700, padding:"2px 4px", borderRadius:"4px 0 0 4px", fontSize:14, whiteSpace:"nowrap" }}>
+                {part.shown}
+              </span>
+              {/* 입력칸 */}
+              <span style={{ display:"inline-flex", flexDirection:"column", alignItems:"center" }}>
+                <input
+                  value={inputs[bi] || ""}
+                  onChange={e => { const n=[...inputs]; n[bi]=e.target.value; setInputs(n); }}
+                  disabled={checked}
+                  placeholder={part.blank.replace(/./g,"_")}
+                  style={{
+                    width: Math.max(part.blank.length * 11, 50),
+                    padding:"3px 6px",
+                    border:`2px solid ${wrong?"#fca5a5":correct?"#86efac":"#93c5fd"}`,
+                    borderLeft:"none",
+                    borderRadius:"0 4px 4px 0",
+                    fontSize:14,
+                    background: wrong?"#fff5f5":correct?"#f0fdf4":"#fff",
+                    outline:"none",
+                  }}
+                />
+                {checked && (
+                  <span style={{ fontSize:11, color:correct?"#15803d":"#dc2626", marginTop:2, lineHeight:1 }}>
+                    {correct ? "✓" : blanks[bi].fill}
+                  </span>
+                )}
+              </span>
             </span>
           );
         })}
       </div>
-      <div style={{display:"flex",gap:8}}>
-        {!checked?<BTN onClick={check} disabled={inputs.some(v=>!v.trim())} style={{flex:1}}>확인</BTN>
-          :<BTN onClick={next} disabled={cIdx+1>=CTW_ITEMS.length} style={{flex:1}}>{cIdx+1<CTW_ITEMS.length?"다음 →":"완료 ✓"}</BTN>}
+      <div style={{ display:"flex", gap:8 }}>
+        {!checked
+          ? <BTN onClick={check} disabled={inputs.some(v=>!v.trim())} style={{flex:1}}>확인</BTN>
+          : <BTN onClick={()=>setCIdx(c=>c+1)} disabled={cIdx+1>=CTW_ITEMS.length} style={{flex:1}}>
+              {cIdx+1<CTW_ITEMS.length ? "다음 →" : "완료 ✓"}
+            </BTN>}
       </div>
     </Card>
   );
@@ -447,13 +482,13 @@ function ReadingSection() {
           <Card>
             <CountdownTimer totalSecs={180} onExpire={()=>{ if(!dChecked) checkDaily(); }}/>
             <div style={{background:"#f8fafc",borderLeft:"4px solid #0ea5e9",borderRadius:8,padding:14,marginBottom:8,fontSize:14,lineHeight:1.8,whiteSpace:"pre-line",color:"#334155"}}>{DAILY_PASSAGES[dIdx].text}</div>
-            {showKo&&<div style={{background:"#eff6ff",borderLeft:"4px solid #6366f1",borderRadius:8,padding:14,marginBottom:12,fontSize:13,lineHeight:1.8,whiteSpace:"pre-line",color:"#4338ca"}}>{DAILY_PASSAGES[dIdx].ko}</div>}
-            <button onClick={()=>setShowKo(s=>!s)} style={{fontSize:12,color:"#6366f1",background:"none",border:"1px solid #c7d2fe",borderRadius:6,padding:"4px 10px",cursor:"pointer",marginBottom:14}}>{showKo?"한국어 숨기기":"🇰🇷 한국어 해석 보기"}</button>
+            {dChecked && showKo && <div style={{background:"#eff6ff",borderLeft:"4px solid #6366f1",borderRadius:8,padding:14,marginBottom:8,fontSize:13,lineHeight:1.8,whiteSpace:"pre-line",color:"#4338ca"}}>{DAILY_PASSAGES[dIdx].ko}</div>}
+            {dChecked && <button onClick={()=>setShowKo(s=>!s)} style={{fontSize:12,color:"#6366f1",background:"none",border:"1px solid #c7d2fe",borderRadius:6,padding:"4px 10px",cursor:"pointer",marginBottom:14}}>{showKo?"한국어 숨기기":"🇰🇷 한국어 해석 보기"}</button>}
             {DAILY_PASSAGES[dIdx].questions.map((q,qi)=>(
               <div key={qi} style={{marginBottom:16}}>
                 <p style={{fontWeight:600,fontSize:14,color:"#1e293b",marginBottom:4}}>{qi+1}. {q.q}</p>
-                <p style={{fontSize:12,color:"#6366f1",marginBottom:8}}>({q.ko})</p>
                 {q.opts.map((opt,oi)=><MCOpt key={oi} label={opt} i={oi} sel={dSel[qi]} checked={dChecked} correct={q.ans} onSelect={v=>setDSel(s=>({...s,[qi]:v}))}/>)}
+                {dChecked && <p style={{fontSize:12,color:"#6366f1",margin:"4px 0 0"}}>({q.ko})</p>}
               </div>
             ))}
             <div style={{display:"flex",gap:8,marginTop:4}}>
@@ -470,13 +505,13 @@ function ReadingSection() {
           <Card>
             <CountdownTimer totalSecs={720} onExpire={()=>{ if(!aChecked) checkAcademic(); }}/>
             <div style={{background:"#f8fafc",borderLeft:"4px solid #7c3aed",borderRadius:8,padding:14,marginBottom:8,fontSize:14,lineHeight:1.8,color:"#334155"}}>{ACADEMIC_PASSAGE.text}</div>
-            {aShowKo&&<div style={{background:"#eff6ff",borderLeft:"4px solid #6366f1",borderRadius:8,padding:14,marginBottom:12,fontSize:13,lineHeight:1.8,color:"#4338ca"}}>{ACADEMIC_PASSAGE.ko}</div>}
-            <button onClick={()=>setAShowKo(s=>!s)} style={{fontSize:12,color:"#6366f1",background:"none",border:"1px solid #c7d2fe",borderRadius:6,padding:"4px 10px",cursor:"pointer",marginBottom:14}}>{aShowKo?"한국어 숨기기":"🇰🇷 한국어 해석 보기"}</button>
+            {aChecked && aShowKo && <div style={{background:"#eff6ff",borderLeft:"4px solid #6366f1",borderRadius:8,padding:14,marginBottom:8,fontSize:13,lineHeight:1.8,color:"#4338ca"}}>{ACADEMIC_PASSAGE.ko}</div>}
+            {aChecked && <button onClick={()=>setAShowKo(s=>!s)} style={{fontSize:12,color:"#6366f1",background:"none",border:"1px solid #c7d2fe",borderRadius:6,padding:"4px 10px",cursor:"pointer",marginBottom:14}}>{aShowKo?"한국어 숨기기":"🇰🇷 한국어 해석 보기"}</button>}
             {ACADEMIC_PASSAGE.questions.map((q,qi)=>(
               <div key={qi} style={{marginBottom:16}}>
-                <p style={{fontWeight:600,fontSize:14,color:"#1e293b",marginBottom:4}}>{qi+1}. {q.q}</p>
-                <p style={{fontSize:12,color:"#6366f1",marginBottom:8}}>({q.ko})</p>
+                <p style={{fontWeight:600,fontSize:14,color:"#1e293b",marginBottom:8}}>{qi+1}. {q.q}</p>
                 {q.opts.map((opt,oi)=><MCOpt key={oi} label={opt} i={oi} sel={aSel[qi]} checked={aChecked} correct={q.ans} onSelect={v=>setASel(s=>({...s,[qi]:v}))}/>)}
+                {aChecked && <p style={{fontSize:12,color:"#6366f1",margin:"4px 0 0"}}>({q.ko})</p>}
               </div>
             ))}
             {!aChecked?<BTN onClick={checkAcademic} disabled={Object.keys(aSel).length<ACADEMIC_PASSAGE.questions.length} style={{width:"100%"}}>채점</BTN>
