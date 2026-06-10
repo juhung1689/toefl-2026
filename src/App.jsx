@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 async function callClaude(prompt, sys = "") {
   const body = { model: "claude-sonnet-4-20250514", max_tokens: 1000, messages: [{ role: "user", content: prompt }] };
   if (sys) body.system = sys;
-  const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const r = await fetch("/api/claude", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const d = await r.json();
   return d.content?.[0]?.text || "";
 }
