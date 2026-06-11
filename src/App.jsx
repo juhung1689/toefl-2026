@@ -551,15 +551,22 @@ function RepeatTask({ onFinish }) {
     if(!hasSpeech){ setStep("done"); return; }
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     const r=new SR();
-    r.lang="en-US"; r.interimResults=false; r.maxAlternatives=1;
-    r.onresult=e=>{ setTranscript(e.results[0][0].transcript); };
-    r.onend=()=>setStep("done");
-    r.onerror=()=>setStep("done");
+    r.lang="en-US"; r.interimResults=true; r.maxAlternatives=1; r.continuous=true;
+    let finalText="";
+    r.onresult=e=>{
+      let interim="";
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) finalText+=e.results[i][0].transcript+" ";
+        else interim+=e.results[i][0].transcript;
+      }
+      setTranscript((finalText+interim).trim());
+    };
+    r.onerror=e=>{ if(e.error!=="no-speech") setStep("done"); };
     recogRef.current=r;
     try{ r.start(); }catch(e){ setStep("done"); }
   };
 
-  const stopRec=()=>{ try{recogRef.current?.stop();}catch{} };
+  const stopRec=()=>{ try{recogRef.current?.stop();}catch{} setStep("done"); };
 
   const grade=async()=>{
     if(!transcript||loading) return;
@@ -649,16 +656,23 @@ function InterviewTask() {
     setTranscript(""); setResult(null); setExpired(false);
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     const r=new SR();
-    r.lang="en-US"; r.interimResults=false; r.maxAlternatives=1;
-    r.onresult=e=>setTranscript(e.results[0][0].transcript);
-    r.onend=()=>setStep("done");
-    r.onerror=()=>setStep("done");
+    r.lang="en-US"; r.interimResults=true; r.maxAlternatives=1; r.continuous=true;
+    let finalText="";
+    r.onresult=e=>{
+      let interim="";
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        if(e.results[i].isFinal) finalText+=e.results[i][0].transcript+" ";
+        else interim+=e.results[i][0].transcript;
+      }
+      setTranscript((finalText+interim).trim());
+    };
+    r.onerror=e=>{ if(e.error!=="no-speech") setStep("done"); };
     recogRef.current=r;
     setStep("recording");
     try{ r.start(); }catch(e){ setStep("done"); }
   };
 
-  const stopRec=()=>{ try{recogRef.current?.stop();}catch{} };
+  const stopRec=()=>{ try{recogRef.current?.stop();}catch{} setStep("done"); };
 
   const grade=async()=>{
     if(loading) return;
